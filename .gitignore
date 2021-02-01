@@ -1,0 +1,10 @@
+node_modules
+dist
+lib
+coverage
+.DS_Store
+
+.env
+
+log.txt
+json_log.txt
