@@ -19,6 +19,8 @@ export interface IAsset {
   readonly ticker: string;
   readonly decimal: number;
 
+  // TODO: add asset icon url
+
   toString(): string;
   currencySymbol(): string;
   eq(asset: Asset): boolean;

@@ -5,7 +5,7 @@ import {
 } from '@xchainjs/xchain-binance';
 import { TxHash } from '@xchainjs/xchain-client';
 import { baseAmount } from '@xchainjs/xchain-util';
-import { MidgardV1, Network as MidgardNetwork } from 'midgard-sdk-v1';
+import { MidgardV2, NetworkType as MidgardNetwork } from 'midgard-sdk-v2';
 
 import {
   getWithdrawTxRuneAmount,
@@ -21,9 +21,9 @@ import {
 } from './types';
 import { Wallet } from './wallet';
 
-export interface BEPSwapClient {
+export interface IBNBChain {
   getBncClient(): BncClient;
-  getMidgard(): MidgardV1;
+  getMidgard(): MidgardV2;
 
   getWallet(): Wallet;
   transfer(tx: TxParams): Promise<TxHash>;
@@ -33,8 +33,8 @@ export interface BEPSwapClient {
   withdraw(params: WithdrawParams): Promise<TxHash>;
 }
 
-export class Client implements BEPSwapClient {
-  private midgard: MidgardV1;
+export class BNBChain implements IBNBChain {
+  private midgard: MidgardV2;
   private bncClient: BncClient;
   private wallet: Wallet;
   public readonly network: Network;
@@ -47,7 +47,7 @@ export class Client implements BEPSwapClient {
     phrase?: string;
   }) {
     this.network = network;
-    this.midgard = new MidgardV1(this.getMidgardNetwork(network));
+    this.midgard = new MidgardV2(this.getMidgardNetwork(network));
     this.bncClient = new BncClient({
       network,
       phrase,
@@ -76,7 +76,7 @@ export class Client implements BEPSwapClient {
   /**
    * get midgard client
    */
-  getMidgard(): MidgardV1 {
+  getMidgard(): MidgardV2 {
     return this.midgard;
   }
 
