@@ -1,4 +1,4 @@
-# BEPSwap SDK
+# Multichain SDK
 
 [![License](https://img.shields.io/npm/l/make-coverage-badge.svg)](https://opensource.org/licenses/MIT)
 ![ts](https://flat.badgen.net/badge/Built%20With/TypeScript/blue)
