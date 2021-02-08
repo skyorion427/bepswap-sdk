@@ -21,7 +21,8 @@ import {
   TxParams,
   AddLiquidityParams,
   WithdrawParams,
-  Balances,
+  Wallet,
+  ChainWallet,
   supportedChains,
 } from './types';
 
@@ -34,7 +35,7 @@ export interface IMultiChain {
   phrase: string;
   network: string;
 
-  allBalances: Balances;
+  allWallet: Wallet;
 
   thor: ThorChain;
   btc: BtcChain;
@@ -44,8 +45,8 @@ export interface IMultiChain {
   getMidgard(): MidgardV2;
   getChainClient(chain: Chain): void;
   getPoolAddressByChain(chain: Chain): Promise<PoolAddress>;
-  loadAllBalances(): Promise<Balances>;
-  getBalanceByChain(chain: Chain): Promise<AssetAmount[]>;
+  getWalletByChain(chain: Chain): Promise<ChainWallet>;
+  loadAllBalances(): Promise<Wallet>;
 
   transfer(tx: TxParams): Promise<TxHash>;
   swap(swap: Swap): Promise<TxHash>;
@@ -59,12 +60,7 @@ export class MultiChain implements IMultiChain {
   public readonly phrase: string;
   public readonly network: Network;
 
-  private balances: Balances = {
-    THOR: [],
-    BNB: [],
-    BTC: [],
-    ETH: [],
-  };
+  private wallet: Wallet;
 
   public readonly thor: ThorChain;
   public readonly btc: BtcChain;
@@ -89,6 +85,25 @@ export class MultiChain implements IMultiChain {
     this.bnb = new BnbChain({ network, phrase });
     this.btc = new BtcChain({ network, phrase });
     this.eth = new EthChain({ network, phrase });
+
+    this.wallet = {
+      THOR: {
+        address: this.thor.getClient().getAddress(),
+        balance: [],
+      },
+      BNB: {
+        address: this.bnb.getClient().getAddress(),
+        balance: [],
+      },
+      BTC: {
+        address: this.btc.getClient().getAddress(),
+        balance: [],
+      },
+      ETH: {
+        address: this.eth.getClient().getAddress(),
+        balance: [],
+      },
+    };
   }
 
   /**
@@ -101,8 +116,8 @@ export class MultiChain implements IMultiChain {
     return 'chaosnet';
   }
 
-  get allBalances(): Balances {
-    return this.balances;
+  get allWallet(): Wallet {
+    return this.wallet;
   }
 
   /**
@@ -134,34 +149,43 @@ export class MultiChain implements IMultiChain {
     return null;
   };
 
-  async loadAllBalances(): Promise<Balances> {
-    try {
-      for (let i = 0; i < this.chains.length; i++) {
-        const chain = this.chains[i];
+  async getWalletByChain(chain: Chain): Promise<ChainWallet> {
+    const chainClient = this.getChainClient(chain);
 
-        await this.getBalanceByChain(chain);
+    if (!chainClient) throw new Error('invalid chain');
+
+    try {
+      const balance = (await chainClient?.loadBalance()) ?? [];
+      const address = chainClient.getClient().getAddress();
+
+      if (chain in this.wallet) {
+        this.wallet = {
+          ...this.wallet,
+          [chain]: {
+            address,
+            balance,
+          },
+        };
       }
 
-      return this.balances;
+      return {
+        address,
+        balance,
+      };
     } catch (error) {
       return Promise.reject(error);
     }
   }
 
-  async getBalanceByChain(chain: Chain): Promise<AssetAmount[]> {
-    const chainClient = this.getChainClient(chain);
-
+  async loadAllBalances(): Promise<Wallet> {
     try {
-      const balance = (await chainClient?.loadBalance()) ?? [];
+      for (let i = 0; i < this.chains.length; i++) {
+        const chain = this.chains[i];
 
-      if (chain in this.balances) {
-        this.balances = {
-          ...this.balances,
-          [chain]: balance,
-        };
+        await this.getWalletByChain(chain);
       }
 
-      return balance;
+      return this.wallet;
     } catch (error) {
       return Promise.reject(error);
     }

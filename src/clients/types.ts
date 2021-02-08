@@ -44,4 +44,9 @@ export const supportedChains = [
 ] as const;
 export type SupportedChain = typeof supportedChains[number];
 
-export type Balances = Record<SupportedChain, AssetAmount[]>;
+export type ChainWallet = {
+  address: string;
+  balance: AssetAmount[];
+};
+
+export type Wallet = Record<SupportedChain, ChainWallet>;
