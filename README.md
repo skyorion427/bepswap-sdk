@@ -7,13 +7,13 @@
 ## Installation
 
 ```sh
-yarn add @thorchain/bepswap-sdk
+yarn add @thorchain/multichain-sdk
 ```
 
 ## Usage
 
 ```
-import { Client } from '@thorchain/bepswap-sdk'
+import { Client } from '@thorchain/multichain-sdk'
 
 const client = new Client({ network: 'mainnet', phrase: 'xxx' })
 

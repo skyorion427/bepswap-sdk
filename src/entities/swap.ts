@@ -1,4 +1,4 @@
-import { NETWORK_FEE } from 'src/constants/fee';
+import { DEFAULT_DECIMAL } from 'src/constants/decimals';
 import invariant from 'tiny-invariant';
 
 import { DEFAULT_SLIP_LIMIT } from '../constants';
@@ -10,8 +10,6 @@ import { Percent } from './percent';
 import { Pool } from './pool';
 import { Price } from './price';
 
-const _0_AMOUNT = Amount.fromAssetAmount(0);
-
 export enum SwapType {
   SINGLE_SWAP,
   DOUBLE_SWAP,
@@ -22,7 +20,7 @@ export enum QuoteType {
   EXACT_OUT,
 }
 
-const _100_ = new Amount(100, AmountType.ASSET_AMOUNT);
+const _100_ = 100;
 
 export interface ISwap {
   readonly swapType: SwapType;
@@ -83,6 +81,8 @@ export class Swap implements ISwap {
   public readonly estimatedNetworkFee: AssetAmount;
   public readonly hasInSufficientFee: boolean = false;
 
+  private _0_AMOUNT: Amount;
+
   constructor(
     inputAsset: Asset,
     outputAsset: Asset,
@@ -95,12 +95,14 @@ export class Swap implements ISwap {
     // input asset price based in output asset
     this.price = new Price(this.outputAsset, this.inputAsset, pools);
 
+    this._0_AMOUNT = Amount.fromAssetAmount(0, inputAsset.decimal);
+
     invariant(
       !this.inputAsset.isRUNE() || !this.outputAsset.isRUNE(),
       'Invalid pair',
     );
 
-    invariant(amount.gte(_0_AMOUNT), 'Invalid Negative Amount');
+    invariant(amount.gte(this._0_AMOUNT), 'Invalid Negative Amount');
 
     // set swap type and pools
     if (!this.inputAsset.isRUNE() && !this.outputAsset.isRUNE()) {
@@ -138,7 +140,10 @@ export class Swap implements ISwap {
       this.swapType === SwapType.SINGLE_SWAP
         ? this.swapPools[0]
         : this.swapPools[1];
-    this.estimatedNetworkFee = this.getNetworkFee(lastPool);
+    this.estimatedNetworkFee = this.getNetworkFee(
+      lastPool,
+      this.outputAsset.isRUNE(),
+    );
 
     // set input, output, slip, fee, percent
     if (amount.asset === this.inputAsset) {
@@ -148,9 +153,9 @@ export class Swap implements ISwap {
       this.outputAmountAfterFee = this.getOutputAfterNetworkFee(amount);
 
       // validate
-      if (this.outputAmountAfterFee.lt(_0_AMOUNT)) {
+      if (this.outputAmountAfterFee.lt(this._0_AMOUNT)) {
         this.hasInSufficientFee = true;
-        this.outputAmount = new AssetAmount(this.outputAsset, _0_AMOUNT);
+        this.outputAmount = new AssetAmount(this.outputAsset, this._0_AMOUNT);
       }
     } else {
       this.quoteType = QuoteType.EXACT_OUT;
@@ -159,9 +164,9 @@ export class Swap implements ISwap {
       this.inputAmount = this.getInputAmount(amount);
 
       // validate
-      if (this.inputAmount.lt(_0_AMOUNT)) {
+      if (this.inputAmount.lt(this._0_AMOUNT)) {
         this.hasInSufficientFee = true;
-        this.inputAmount = new AssetAmount(this.inputAsset, _0_AMOUNT);
+        this.inputAmount = new AssetAmount(this.inputAsset, this._0_AMOUNT);
       }
     }
 
@@ -189,7 +194,7 @@ export class Swap implements ISwap {
   ): AssetAmount {
     // formula: (x * X * Y) / (x + X) ^ 2
     const toRUNE = !inputAmount.asset.isRUNE();
-    const outputAsset = toRUNE ? Asset.RUNEB1A() : pool.asset;
+    const outputAsset = toRUNE ? Asset.RUNE() : pool.asset;
 
     const x = inputAmount.amount;
     const X = toRUNE ? pool.assetDepth : pool.runeDepth;
@@ -198,6 +203,7 @@ export class Swap implements ISwap {
     const denominator = new Amount(
       x.add(X).assetAmount.pow(2),
       AmountType.ASSET_AMOUNT,
+      inputAmount.decimal,
     );
 
     return new AssetAmount(outputAsset, numerator.div(denominator));
@@ -241,10 +247,8 @@ export class Swap implements ISwap {
       pool.detail,
     );
 
-    const networkFee = toRUNE
-      ? NETWORK_FEE
-      : NETWORK_FEE.mul(poolAfterSwap.priceOf(Asset.RUNEB1A()));
-    const outputAsset = toRUNE ? Asset.RUNEB1A() : pool.asset;
+    const networkFee = this.getNetworkFee(poolAfterSwap, toRUNE);
+    const outputAsset = toRUNE ? Asset.RUNE() : pool.asset;
 
     return new AssetAmount(
       this.outputAsset,
@@ -252,11 +256,16 @@ export class Swap implements ISwap {
     );
   }
 
-  private getNetworkFee(pool: Pool): AssetAmount {
-    const toRUNE = this.outputAsset.isRUNE();
+  private getNetworkFee(pool: Pool, toRUNE: boolean): AssetAmount {
+    // network fee is 1 RUNE
+    const networkFeeInRune = new AssetAmount(
+      Asset.RUNE(),
+      Amount.fromAssetAmount(1, pool.decimal),
+    );
+
     const feeAmount = toRUNE
-      ? NETWORK_FEE
-      : NETWORK_FEE.mul(pool.priceOf(Asset.RUNEB1A()));
+      ? networkFeeInRune
+      : networkFeeInRune.mul(pool.priceOf(Asset.RUNE()));
 
     return new AssetAmount(this.outputAsset, feeAmount);
   }
@@ -291,7 +300,10 @@ export class Swap implements ISwap {
       pool.detail,
     );
 
-    const networkFee = this.getNetworkFee(poolAfterSwap);
+    const networkFee = this.getNetworkFee(
+      poolAfterSwap,
+      this.outputAsset.isRUNE(),
+    );
 
     return new AssetAmount(
       this.outputAsset,
@@ -312,7 +324,9 @@ export class Swap implements ISwap {
 
   // 1 - output / input
   getFeePercent(inputAmount: AssetAmount): Percent {
-    return Amount.fromAssetAmount(1).sub(this.getOutputPercent(inputAmount));
+    return Amount.fromAssetAmount(1, inputAmount.decimal).sub(
+      this.getOutputPercent(inputAmount),
+    );
   }
 
   private getSingleSwapInput(
@@ -329,6 +343,7 @@ export class Swap implements ISwap {
     const part2: Amount = new Amount(
       X.assetAmount.pow(2).multipliedBy(4),
       AmountType.ASSET_AMOUNT,
+      outputAmount.decimal,
     );
 
     const inputAmount = new Amount(
@@ -336,8 +351,9 @@ export class Swap implements ISwap {
         .minus(part1.assetAmount.pow(2).minus(part2.assetAmount).sqrt())
         .div(2),
       AmountType.ASSET_AMOUNT,
+      outputAmount.decimal,
     );
-    const inputAsset = !toRUNE ? Asset.RUNEB1A() : pool.asset;
+    const inputAsset = !toRUNE ? Asset.RUNE() : pool.asset;
 
     return new AssetAmount(inputAsset, inputAmount);
   }
@@ -395,7 +411,7 @@ export class Swap implements ISwap {
   private getSingleSwapFee(inputAmount: AssetAmount, pool: Pool): AssetAmount {
     // formula: (x * x * Y) / (x + X) ^ 2
     const toRUNE = !inputAmount.asset.isRUNE();
-    const outputAsset = toRUNE ? Asset.RUNEB1A() : pool.asset;
+    const outputAsset = toRUNE ? Asset.RUNE() : pool.asset;
 
     const x = inputAmount.amount;
     const X = toRUNE ? pool.assetDepth : pool.runeDepth;
@@ -404,6 +420,7 @@ export class Swap implements ISwap {
     const denominator = new Amount(
       x.add(X).assetAmount.pow(2),
       AmountType.ASSET_AMOUNT,
+      inputAmount.decimal,
     );
 
     return new AssetAmount(outputAsset, numerator.div(denominator));
@@ -438,7 +455,7 @@ export class Swap implements ISwap {
 
     // first swap fee based in output asset
     const firstSwapFeeInAsset = new AssetAmount(
-      Asset.RUNEB1A(),
+      Asset.RUNE(),
       firstSwapFeeInRune,
     ).totalPriceIn(this.outputAsset, this.swapPools);
 

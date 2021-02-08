@@ -1,13 +1,30 @@
 import {
+  BNBChain,
+  BTCChain,
+  THORChain,
+  ETHChain,
+  LTCChain,
   assetFromString,
   assetToString,
   Chain,
   currencySymbolByAsset,
   AssetBNB,
-  AssetRune67C,
-  AssetRuneB1A,
+  AssetBTC,
+  AssetETH,
+  AssetLTC,
+  AssetRuneNative,
 } from '@xchainjs/xchain-util';
 
+import {
+  DEFAULT_DECIMAL,
+  THORCHAIN_DECIMAL,
+  BNB_DECIMAL,
+  BTC_DECIMAL,
+  ETH_DECIMAL,
+  LTC_DECIMAL,
+} from '../constants/decimals';
+import { Amount } from './amount';
+import { AssetAmount } from './assetAmount';
 import { Pool } from './pool';
 import { Price } from './price';
 
@@ -24,8 +41,6 @@ export interface IAsset {
   toString(): string;
   currencySymbol(): string;
   eq(asset: Asset): boolean;
-  isRUNE67C(): boolean;
-  isRUNEB1A(): boolean;
   isRUNE(): boolean;
   isBNB(): boolean;
   sortsBefore(asset: Asset): boolean;
@@ -39,32 +54,90 @@ export class Asset implements IAsset {
   public readonly decimal: number;
 
   public static BNB(): Asset {
-    return new Asset(AssetBNB.chain, AssetBNB.symbol, 8);
+    return new Asset(AssetBNB.chain, AssetBNB.symbol);
   }
 
-  public static RUNE67C(): Asset {
-    return new Asset(AssetRune67C.chain, AssetRune67C.symbol, 8);
+  public static RUNE(): Asset {
+    return new Asset(AssetRuneNative.chain, AssetRuneNative.symbol);
   }
 
-  public static RUNEB1A(): Asset {
-    return new Asset(AssetRuneB1A.chain, AssetRuneB1A.symbol, 8);
+  public static BTC(): Asset {
+    return new Asset(AssetBTC.chain, AssetBTC.symbol);
   }
 
-  public static fromAssetString(asset: string, decimal = 8): Asset | null {
+  public static ETH(): Asset {
+    return new Asset(AssetETH.chain, AssetETH.symbol);
+  }
+  public static LTC(): Asset {
+    return new Asset(AssetLTC.chain, AssetLTC.symbol);
+  }
+
+  public static fromAssetString(asset: string): Asset | null {
     const { chain, symbol } = assetFromString(asset) || {};
 
     if (chain && symbol) {
-      return new Asset(chain, symbol, decimal);
+      return new Asset(chain, symbol);
     }
 
     return null;
   }
 
-  constructor(chain: Chain, symbol: string, decimal = 8) {
+  public static getDecimalByChain(chain: Chain): number {
+    if (chain === BNBChain) return BNB_DECIMAL;
+    if (chain === BTCChain) return BTC_DECIMAL;
+    if (chain === THORChain) return THORCHAIN_DECIMAL;
+    if (chain === ETHChain) return ETH_DECIMAL;
+    if (chain === LTCChain) return LTC_DECIMAL;
+
+    return DEFAULT_DECIMAL;
+  }
+
+  public static getMinAmountByChain(chain: Chain): AssetAmount {
+    if (chain === BNBChain) {
+      return new AssetAmount(
+        Asset.BNB(),
+        Amount.fromBaseAmount(1, Asset.BNB().decimal),
+      );
+    }
+    // 1000 satoshi
+    if (chain === BTCChain) {
+      return new AssetAmount(
+        Asset.BTC(),
+        Amount.fromBaseAmount(1000, Asset.BTC().decimal),
+      );
+    }
+    // 1 Thor
+    if (chain === THORChain) {
+      return new AssetAmount(
+        Asset.RUNE(),
+        Amount.fromBaseAmount(1, Asset.RUNE().decimal),
+      );
+    }
+    // 0 ETH
+    if (chain === ETHChain) {
+      return new AssetAmount(
+        Asset.ETH(),
+        Amount.fromBaseAmount(0, Asset.ETH().decimal),
+      );
+    }
+    if (chain === LTCChain) {
+      return new AssetAmount(
+        Asset.LTC(),
+        Amount.fromBaseAmount(1, Asset.LTC().decimal),
+      );
+    }
+
+    return new AssetAmount(
+      Asset.RUNE(),
+      Amount.fromBaseAmount(1, Asset.RUNE().decimal),
+    );
+  }
+
+  constructor(chain: Chain, symbol: string) {
     this.chain = chain;
     this.symbol = symbol;
     this.ticker = this.getTicker(symbol);
-    this.decimal = decimal;
+    this.decimal = Asset.getDecimalByChain(chain);
   }
 
   private getTicker(symbol: string): string {
@@ -92,16 +165,8 @@ export class Asset implements IAsset {
     );
   }
 
-  isRUNE67C(): boolean {
-    return this.eq(Asset.RUNE67C());
-  }
-
-  isRUNEB1A(): boolean {
-    return this.eq(Asset.RUNEB1A());
-  }
-
   isRUNE(): boolean {
-    return this.isRUNEB1A() || this.isRUNE67C();
+    return this.eq(Asset.RUNE());
   }
 
   isBNB(): boolean {

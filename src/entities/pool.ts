@@ -7,6 +7,7 @@ export interface IPool {
   readonly asset: Asset;
   readonly runeDepth: Amount;
   readonly assetDepth: Amount;
+  readonly decimal: number;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly detail: any;
@@ -22,6 +23,7 @@ export class Pool implements IPool {
   public readonly asset: Asset;
   public readonly runeDepth: Amount;
   public readonly assetDepth: Amount;
+  public readonly decimal: number;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public readonly detail: any;
@@ -49,8 +51,8 @@ export class Pool implements IPool {
     const assetObj = Asset.fromAssetString(asset);
 
     if (assetObj && runeDepth && assetDepth) {
-      const runeAmount = Amount.fromBaseAmount(runeDepth);
-      const assetAmount = Amount.fromBaseAmount(assetDepth);
+      const runeAmount = Amount.fromBaseAmount(runeDepth, assetObj.decimal);
+      const assetAmount = Amount.fromBaseAmount(assetDepth, assetObj.decimal);
 
       return new Pool(assetObj, runeAmount, assetAmount, detail);
     }
@@ -69,6 +71,7 @@ export class Pool implements IPool {
     this.runeDepth = runeDepth;
     this.assetDepth = assetDepth;
     this.detail = detail;
+    this.decimal = asset.decimal;
   }
 
   get assetPriceInRune(): Amount {

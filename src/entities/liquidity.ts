@@ -35,7 +35,7 @@ export class Liquidity implements ILiquidity {
 
   constructor(pool: Pool, liquidityUnits: Amount) {
     this.pool = pool;
-    this.poolUnits = Amount.fromBaseAmount(pool.detail.units);
+    this.poolUnits = Amount.fromBaseAmount(pool.detail.units, pool.decimal);
     this.liquidityUnits = liquidityUnits;
   }
 
@@ -50,7 +50,7 @@ export class Liquidity implements ILiquidity {
   public get runeShare(): AssetAmount {
     // formula: Total Balance * liquidity Units / total Units
     return new AssetAmount(
-      Asset.RUNEB1A(),
+      Asset.RUNE(),
       this.pool.runeDepth.mul(this.liquidityUnits).div(this.poolUnits),
     );
   }

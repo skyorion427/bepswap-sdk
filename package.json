@@ -34,7 +34,7 @@
     "@xchainjs/xchain-litecoin": "^0.0.2",
     "@xchainjs/xchain-polkadot": "^0.4.1",
     "@xchainjs/xchain-thorchain": "^0.10.0",
-    "@xchainjs/xchain-util": "^0.2.1",
+    "@xchainjs/xchain-util": "^0.2.2",
     "bignumber.js": "^9.0.1",
     "midgard-sdk-v2": "git+https://github.com/skyorion427/midgard-sdk-v2.git",
     "tiny-invariant": "^1.1.0"

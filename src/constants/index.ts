@@ -1,2 +1,2 @@
 export * from './amount';
-export * from './fee';
+export * from './decimals';

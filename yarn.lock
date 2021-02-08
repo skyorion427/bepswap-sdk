@@ -1540,10 +1540,15 @@
     axios "^0.21.0"
     nock "^13.0.5"
 
-"@xchainjs/xchain-util@^0.2.0", "@xchainjs/xchain-util@^0.2.1":
+"@xchainjs/xchain-util@^0.2.0":
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/@xchainjs/xchain-util/-/xchain-util-0.2.1.tgz#f1c4d8b5acb84207a4c60d65b489b1ae0668c8dd"
   integrity sha512-+9s54QZUI2zriQNy4JlpQWy4VZ9FkmTGhYc1x1DYkPE6cIYup4ywxQ1FuWwzdBoUE2Zk+KZ3Qdi2Qeo/IyJb4g==
+
+"@xchainjs/xchain-util@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@xchainjs/xchain-util/-/xchain-util-0.2.2.tgz#c5f957a63afe2d441eb8c9751645375ad7ff7f76"
+  integrity sha512-JTvCI75DuEQmGCZca2Xsi0A6g3uW4h8qGkMYRtay6vP2a6MfnhHv5xGDlvIcgadn1U9xbmGqvrK1DfT6WhgsYg==
 
 JSONStream@^1.0.4:
   version "1.3.5"
@@ -5358,7 +5363,7 @@ micromatch@^4.0.2:
 
 "midgard-sdk-v2@git+https://github.com/skyorion427/midgard-sdk-v2.git":
   version "1.0.0"
-  resolved "git+https://github.com/skyorion427/midgard-sdk-v2.git#78397c87b68bf22c2fb0c672be9cb2b8d0c1372c"
+  resolved "git+https://github.com/skyorion427/midgard-sdk-v2.git#76fbd654a3c25acc0a3a7a03d1c0e9b9926bb98c"
   dependencies:
     "@thorchain/asgardex-midgard" "^1.1.0"
     axios "^0.21.1"

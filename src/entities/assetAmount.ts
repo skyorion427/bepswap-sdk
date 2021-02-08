@@ -62,11 +62,13 @@ export class AssetAmount extends Amount implements IAssetAmount {
       amount = new Amount(
         this.assetAmount.multipliedBy(value.assetAmount),
         AmountType.ASSET_AMOUNT,
+        this.decimal,
       );
     } else {
       amount = new Amount(
         this.assetAmount.multipliedBy(value),
         AmountType.ASSET_AMOUNT,
+        this.decimal,
       );
     }
 
@@ -79,11 +81,13 @@ export class AssetAmount extends Amount implements IAssetAmount {
       amount = new Amount(
         this.assetAmount.dividedBy(value.assetAmount),
         AmountType.ASSET_AMOUNT,
+        this.decimal,
       );
     } else {
       amount = new Amount(
         this.assetAmount.dividedBy(value),
         AmountType.ASSET_AMOUNT,
+        this.decimal,
       );
     }
 
@@ -124,7 +128,7 @@ export class AssetAmount extends Amount implements IAssetAmount {
       this.asset,
       quoteAsset,
       pools,
-      Amount.fromAssetAmount(this.assetAmount),
+      Amount.fromAssetAmount(this.assetAmount, this.decimal),
     );
   }
 }

@@ -6,8 +6,6 @@ import { Amount, IAmount } from './amount';
 import { Asset } from './asset';
 import { Pool } from './pool';
 
-export const ONE_ASSET_AMOUNT = Amount.fromAssetAmount(1);
-
 export interface IPrice extends IAmount {
   readonly baseAsset: Asset;
   readonly quoteAsset: Asset;
@@ -30,8 +28,10 @@ export class Price extends Amount {
     baseAsset: Asset,
     quoteAsset: Asset,
     pools: Pool[],
-    amount: Amount = ONE_ASSET_AMOUNT,
+    priceAmount?: Amount,
   ) {
+    const amount = priceAmount || Amount.fromAssetAmount(1, baseAsset.decimal);
+
     super(amount.assetAmount, AmountType.ASSET_AMOUNT, baseAsset.decimal);
 
     this.amount = amount;

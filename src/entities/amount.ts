@@ -22,6 +22,9 @@ export interface IAmount {
   readonly baseAmount: BigNumber;
   readonly assetAmount: BigNumber;
   readonly decimal: number;
+
+  _0_AMOUNT: Amount;
+
   add(amount: Amount): Amount;
   sub(amount: Amount): Amount;
   mul(value: BigNumber.Value | Amount): Amount;
@@ -48,18 +51,24 @@ export class Amount implements IAmount {
   public readonly baseAmount: BigNumber;
   public readonly decimal: number;
 
-  public static fromBaseAmount(amount: BigNumber.Value, decimal = 8): Amount {
+  public static fromBaseAmount(
+    amount: BigNumber.Value,
+    decimal: number,
+  ): Amount {
     return new Amount(amount, AmountType.BASE_AMOUNT, decimal);
   }
 
-  public static fromAssetAmount(amount: BigNumber.Value, decimal = 8): Amount {
+  public static fromAssetAmount(
+    amount: BigNumber.Value,
+    decimal: number,
+  ): Amount {
     return new Amount(amount, AmountType.ASSET_AMOUNT, decimal);
   }
 
   constructor(
     amount: BigNumber.Value,
     type: AmountType = AmountType.BASE_AMOUNT,
-    decimal = 8,
+    decimal: number,
   ) {
     this.decimal = decimal;
     if (type === AmountType.BASE_AMOUNT) {
@@ -71,11 +80,16 @@ export class Amount implements IAmount {
     }
   }
 
+  get _0_AMOUNT() {
+    return new Amount(0, AmountType.ASSET_AMOUNT, this.decimal);
+  }
+
   add(amount: Amount): Amount {
     invariant(this.decimal === amount.decimal, 'Decimal must be same');
     return new Amount(
       this.baseAmount.plus(amount.baseAmount),
       AmountType.BASE_AMOUNT,
+      this.decimal,
     );
   }
 
@@ -84,6 +98,7 @@ export class Amount implements IAmount {
     return new Amount(
       this.baseAmount.minus(amount.baseAmount),
       AmountType.BASE_AMOUNT,
+      this.decimal,
     );
   }
 
@@ -92,11 +107,13 @@ export class Amount implements IAmount {
       return new Amount(
         this.assetAmount.multipliedBy(value.assetAmount),
         AmountType.ASSET_AMOUNT,
+        this.decimal,
       );
     }
     return new Amount(
       this.assetAmount.multipliedBy(value),
       AmountType.ASSET_AMOUNT,
+      this.decimal,
     );
   }
 
@@ -105,11 +122,13 @@ export class Amount implements IAmount {
       return new Amount(
         this.assetAmount.dividedBy(value.assetAmount),
         AmountType.ASSET_AMOUNT,
+        this.decimal,
       );
     }
     return new Amount(
       this.assetAmount.dividedBy(value),
       AmountType.ASSET_AMOUNT,
+      this.decimal,
     );
   }
 

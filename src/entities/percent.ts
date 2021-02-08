@@ -1,9 +1,9 @@
 import BigNumber from 'bignumber.js';
 
-import { AmountType, Rounding } from './amount';
+import { Rounding } from './amount';
 import { Amount } from './amount';
 
-const _100_ = new Amount(100, AmountType.ASSET_AMOUNT);
+const _100_ = 100;
 
 export class Percent extends Amount {
   toSignificant(
