@@ -12,7 +12,7 @@ import {
   PoolAddress,
 } from 'midgard-sdk-v2';
 
-import { Swap, Memo, Asset, AssetAmount } from '../entities';
+import { Swap, Memo, Asset } from '../entities';
 import { BnbChain } from './binance';
 import { BtcChain } from './bitcoin';
 import { EthChain } from './ethereum';
